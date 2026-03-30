@@ -1,4 +1,10 @@
-import { getPosts } from "./api.js";
+import {
+  addPost,
+  dislikePost,
+  getPosts,
+  getUserPosts,
+  likePost,
+} from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -19,11 +25,26 @@ import {
 export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
+let currentUserPostsPageUserId = null;
 
 const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
+const toggleLike = ({ postId }) => {
+  const selectedPost = posts.find((post) => post.id === postId);
+  if (!selectedPost || !user) {
+    return Promise.resolve();
+  }
+
+  const request = selectedPost.isLiked ? dislikePost : likePost;
+
+  return request({ postId, token: getToken() }).then((updatedPost) => {
+    posts = posts.map((post) => (post.id === postId ? updatedPost : post));
+    renderApp();
+  });
+};
+
 
 export const logout = () => {
   user = null;
@@ -51,6 +72,7 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === POSTS_PAGE) {
+      currentUserPostsPageUserId = null;
       page = LOADING_PAGE;
       renderApp();
 
@@ -67,11 +89,20 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
-      // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
-      page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      currentUserPostsPageUserId = data.userId;
+      page = LOADING_PAGE;
+      renderApp();
+
+      return getUserPosts({ userId: data.userId, token: getToken() })
+        .then((newPosts) => {
+          page = USER_POSTS_PAGE;
+          posts = newPosts;
+          renderApp();
+        })
+        .catch((error) => {
+          console.error(error);
+          goToPage(POSTS_PAGE);
+        });
     }
 
     page = newPage;
@@ -110,9 +141,23 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-        // @TODO: реализовать добавление поста в API
-        console.log("Добавляю пост...", { description, imageUrl });
-        goToPage(POSTS_PAGE);
+           addPost({
+          description,
+          imageUrl,
+          token: getToken(),
+        })
+          .then(() => {
+            return getPosts({ token: getToken() });
+          })
+          .then((newPosts) => {
+            posts = newPosts;
+            page = POSTS_PAGE;
+            renderApp();
+          })
+          .catch((error) => {
+            console.error(error);
+            alert(error.message);
+          });
       },
     });
   }
@@ -120,13 +165,28 @@ const renderApp = () => {
   if (page === POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
+        onLikeClick: (postId) => toggleLike({ postId }),
     });
   }
 
   if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
+     const pageTitle =
+      posts.length > 0 ? `Посты пользователя ${posts[0].user.name}` : "Посты пользователя";
+
+    return renderPostsPageComponent({
+      appEl,
+      onLikeClick: (postId) =>
+        toggleLike({ postId }).then(() => {
+          return getUserPosts({
+            userId: currentUserPostsPageUserId,
+            token: getToken(),
+          }).then((newPosts) => {
+            posts = newPosts;
+            renderApp();
+          });
+        }),
+      pageTitle,
+    });
   }
 };
 
