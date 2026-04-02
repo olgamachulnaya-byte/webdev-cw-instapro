@@ -27,10 +27,8 @@ export let page = null;
 export let posts = [];
 let currentUserPostsPageUserId = null;
 
-const getToken = () => {
-  const token = user ? `Bearer ${user.token}` : undefined;
-  return token;
-};
+const getToken = () => (user ? `Bearer ${user.token}` : undefined);
+
 const toggleLike = ({ postId }) => {
   const selectedPost = posts.find((post) => post.id === postId);
   if (!selectedPost || !user) {
@@ -45,16 +43,12 @@ const toggleLike = ({ postId }) => {
   });
 };
 
-
 export const logout = () => {
   user = null;
   removeUserFromLocalStorage();
   goToPage(POSTS_PAGE);
 };
 
-/**
- * Включает страницу приложения
- */
 export const goToPage = (newPage, data) => {
   if (
     [
@@ -66,7 +60,6 @@ export const goToPage = (newPage, data) => {
     ].includes(newPage)
   ) {
     if (newPage === ADD_POSTS_PAGE) {
-      /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
       page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
       return renderApp();
     }
@@ -84,7 +77,10 @@ export const goToPage = (newPage, data) => {
         })
         .catch((error) => {
           console.error(error);
-          goToPage(POSTS_PAGE);
+          alert("Не удалось загрузить посты. Попробуйте позже.");
+          page = POSTS_PAGE;
+          posts = [];
+          renderApp();
         });
     }
 
@@ -101,6 +97,7 @@ export const goToPage = (newPage, data) => {
         })
         .catch((error) => {
           console.error(error);
+           alert("Не удалось загрузить ленту пользователя.");
           goToPage(POSTS_PAGE);
         });
     }
@@ -116,12 +113,9 @@ export const goToPage = (newPage, data) => {
 
 const renderApp = () => {
   const appEl = document.getElementById("app");
+  
   if (page === LOADING_PAGE) {
-    return renderLoadingPageComponent({
-      appEl,
-      user,
-      goToPage,
-    });
+   return renderLoadingPageComponent({ appEl, user, goToPage });
   }
 
   if (page === AUTH_PAGE) {
@@ -141,14 +135,12 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-           addPost({
+          addPost({
           description,
           imageUrl,
           token: getToken(),
         })
-          .then(() => {
-            return getPosts({ token: getToken() });
-          })
+         .then(() => getPosts({ token: getToken() }))
           .then((newPosts) => {
             posts = newPosts;
             page = POSTS_PAGE;
@@ -157,6 +149,8 @@ const renderApp = () => {
           .catch((error) => {
             console.error(error);
             alert(error.message);
+            page = ADD_POSTS_PAGE;
+            renderApp();
           });
       },
     });
@@ -165,13 +159,15 @@ const renderApp = () => {
   if (page === POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
-        onLikeClick: (postId) => toggleLike({ postId }),
+    onLikeClick: (postId) => toggleLike({ postId }),
     });
   }
 
   if (page === USER_POSTS_PAGE) {
      const pageTitle =
-      posts.length > 0 ? `Посты пользователя ${posts[0].user.name}` : "Посты пользователя";
+      posts.length > 0
+        ? `Посты пользователя ${posts[0].user.name}`
+        : "Посты пользователя";
 
     return renderPostsPageComponent({
       appEl,
