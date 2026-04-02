@@ -2,7 +2,7 @@
 // "боевая" версия инстапро лежит в ключе prod
 const  PersonalKey  = "instapro-cw-2026";
 const baseHost = "https://webdev-hw-api.vercel.app";
-const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
+const postsHost = `https://wedev-api.sky.pro/api/v1/:${personalKey}/instapro`;
 const  getJson  =  ( response )  =>  {
   if  ( response.status === 401 ) {​​   
     выдать  новую  ошибку ( "Нет авторизации" ) ;
