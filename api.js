@@ -3,24 +3,25 @@
 const  PersonalKey  = "instapro-cw-2026";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `https://wedev-api.sky.pro/api/v1/:${personalKey}/instapro`;
-const  getJson  =  ( response )  =>  {
-  if  ( response.status === 401 ) {​​   
-    выдать  новую  ошибку ( "Нет авторизации" ) ;
+const getJson = (response) => {
+  if (response.status === 401) {
+    throw new Error("Нет авторизации");
   }
 
-  если  ( ! response . ok )  {
-    вернуть  ответ
-      .json ( )​
-      . затем ( ( errorData )  =>  {
-        выдать  новую  ошибку ( errorData . error  ||  "Ошибка API" ) ;
-      } )
-      .catch ( ( ) = > {  
-        выдать  новую  ошибку ( "Ошибка API" ) ;
-      } ) ;
+  if (!response.ok) {
+    return response
+      .json()
+      .then((errorData) => {
+        throw new Error(errorData.error || "Ошибка API");
+      })
+      .catch(() => {
+        throw new Error("Ошибка API");
+      });
   }
 
-  return  response.json ( ) ;​​
-} ;
+  return response.json();
+};
+
 export function getPosts({ token }) {
   return fetch(postsHost, {
     method: "GET",
