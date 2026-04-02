@@ -2,39 +2,20 @@ import { loginUser, registerUser } from "../api.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
 
-/**
- * Компонент страницы авторизации.
- * Этот компонент предоставляет пользователю интерфейс для входа в систему или регистрации.
- * Форма переключается между режимами "Вход" и "Регистрация".
- *
- * @param {HTMLElement} params.appEl - Корневой элемент приложения, в который будет рендериться страница.
- * @param {Function} params.setUser - Функция, вызываемая при успешной авторизации или регистрации.
- *                                    Принимает объект пользователя в качестве аргумента.
- */
+
 export function renderAuthPageComponent({ appEl, setUser }) {
-  /**
-   * Флаг, указывающий текущий режим формы.
-   * Если `true`, форма находится в режиме входа. Если `false`, в режиме регистрации.
-   * @type {boolean}
-   */
+ 
   let isLoginMode = true;
 
-  /**
-   * URL изображения, загруженного пользователем при регистрации.
-   * Используется только в режиме регистрации.
-   * @type {string}
-   */
+  
   let imageUrl = "";
 
-  /**
-   * Рендерит форму авторизации или регистрации.
-   * В зависимости от значения `isLoginMode` отображает соответствующий интерфейс.
-   */
+  
   const renderForm = () => {
     const appHtml = `
       <div class="page-container">
           <div class="header-container"></div>
-          <div class="form">
+          <div class="form fade-in">
               <h3 class="form-title">
                 ${
                   isLoginMode
@@ -53,7 +34,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                   }
                   <input type="text" id="login-input" class="input" placeholder="Логин" />
                   <input type="password" id="password-input" class="input" placeholder="Пароль" />
-                  <div class="form-error"></div>
+                 <div class="form-error" role="alert"></div>
                   <button class="button" id="login-button">${
                     isLoginMode ? "Войти" : "Зарегистрироваться"
                   }</button>
@@ -67,25 +48,21 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                 </p>
               </div>
           </div>
-      </div>    
+         </div> 
     `;
 
     appEl.innerHTML = appHtml;
 
-    /**
-     * Устанавливает сообщение об ошибке в форме.
-     * @param {string} message - Текст сообщения об ошибке.
-     */
+   const submitButton = appEl.querySelector("#login-button");
     const setError = (message) => {
       appEl.querySelector(".form-error").textContent = message;
     };
 
-    // Рендерим заголовок страницы
+   
     renderHeaderComponent({
       element: document.querySelector(".header-container"),
     });
 
-    // Если режим регистрации, рендерим компонент загрузки изображения
     const uploadImageContainer = appEl.querySelector(".upload-image-container");
     if (uploadImageContainer) {
       renderUploadImageComponent({
@@ -96,77 +73,64 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       });
     }
 
-    // Обработка клика на кнопку входа/регистрации
     document.getElementById("login-button").addEventListener("click", () => {
       setError("");
+      submitButton.disabled = true;
 
-      if (isLoginMode) {
-        // Обработка входа
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
+      const login = document.getElementById("login-input").value.trim();
+      const password = document.getElementById("password-input").value.trim();
 
-        if (!login) {
-          alert("Введите логин");
-          return;
-        }
-
-        if (!password) {
-          alert("Введите пароль");
+        if (isLoginMode) {
+        if (!login || !password) {
+          submitButton.disabled = false;
+          setError("Введите логин и пароль");
           return;
         }
 
         loginUser({ login, password })
-          .then((user) => {
-            setUser(user.user);
+          .then((newUser) => {
+            setUser(newUser.user);
           })
           .catch((error) => {
-            console.warn(error);
             setError(error.message);
+            })
+          .finally(() => {
+            submitButton.disabled = false;
           });
-      } else {
-        // Обработка регистрации
-        const login = document.getElementById("login-input").value;
-        const name = document.getElementById("name-input").value;
-        const password = document.getElementById("password-input").value;
+    
+       return;
+      }
 
-        if (!name) {
-          alert("Введите имя");
-          return;
-        }
-
-        if (!login) {
-          alert("Введите логин");
-          return;
-        }
-
-        if (!password) {
-          alert("Введите пароль");
-          return;
-        }
+      const name = document.getElementById("name-input").value.trim();
+      if (!name || !login || !password) {
+        submitButton.disabled = false;
+        setError("Заполните все поля регистрации");
+        return;
+      }
 
         if (!imageUrl) {
-          alert("Не выбрана фотография");
-          return;
-        }
-
-        registerUser({ login, password, name, imageUrl })
-          .then((user) => {
-            setUser(user.user);
-          })
-          .catch((error) => {
-            console.warn(error);
-            setError(error.message);
-          });
+        submitButton.disabled = false;
+        setError("Добавьте фото профиля");
+        return;
       }
+        registerUser({ login, password, name, imageUrl })
+        .then((newUser) => {
+          setUser(newUser.user);
+        })
+        .catch((error) => {
+          setError(error.message);
+        })
+        .finally(() => {
+          submitButton.disabled = false;
+        });
     });
 
-    // Обработка переключения режима (вход ↔ регистрация)
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLoginMode = !isLoginMode;
-      renderForm(); // Перерисовываем форму с новым режимом
+      imageUrl = "";
+      renderForm();
     });
   };
 
-  // Инициализация формы
   renderForm();
 }
