@@ -21,35 +21,39 @@ const getJson = (response) => {
 
   return response.json();
 };
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
 
 export function getPosts({ token }) {
   return fetch(postsHost, {
     method: "GET",
     headers: {
-      Authorization: token,
+       ...(token ? { Authorization: token } : {}),
     },
   })
    .then(getJson)
-    .then((data) => {
-      return data.posts;
-    });
-    export function getUserPosts({ userId, token }) {
+    .then((data) => data.posts);
+}
+
+export function getUserPosts({ userId, token }) {
   return fetch(`${postsHost}/user-posts/${userId}`, {
     method: "GET",
     headers: {
-      Authorization: token,
+     ...(token ? { Authorization: token } : {}),
     },
   })
     .then(getJson)
    
-    .then((data) => {
-      return data.posts;
-    });
+    .then((data) => data.posts);
+  
 }
+
 export function addPost({ description, imageUrl, token }) {
   return fetch(postsHost, {
     method: "POST",
     headers: {
+       ...jsonHeaders,
       Authorization: token,
     },
     body: JSON.stringify({
@@ -80,9 +84,11 @@ export function dislikePost({ postId, token }) {
     .then(getJson)
     .then((data) => data.post);
 }
+
 export function registerUser({ login, password, name, imageUrl }) {
   return fetch(baseHost + "/api/user", {
     method: "POST",
+    headers: jsonHeaders,
     body: JSON.stringify({
       login,
       password,
@@ -93,13 +99,15 @@ export function registerUser({ login, password, name, imageUrl }) {
     if (response.status === 400) {
       throw new Error("Такой пользователь уже существует");
     }
-    return response.json();
+  
+   return getJson(response);
   });
 }
 
 export function loginUser({ login, password }) {
   return fetch(baseHost + "/api/user/login", {
     method: "POST",
+     headers: jsonHeaders,
     body: JSON.stringify({
       login,
       password,
@@ -108,7 +116,8 @@ export function loginUser({ login, password }) {
     if (response.status === 400) {
       throw new Error("Неверный логин или пароль");
     }
-    return response.json();
+
+    return getJson(response);
   });
 }
 
@@ -120,7 +129,5 @@ export function uploadImage({ file }) {
   return fetch(baseHost + "/api/upload/image", {
     method: "POST",
     body: data,
-  }).then((response) => {
-    return response.json();
-  });
+   }).then(getJson);
 }
