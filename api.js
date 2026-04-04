@@ -9,14 +9,14 @@ const getJson = (response) => {
   }
 
   if (!response.ok) {
-    return response
-      .json()
-      .then((errorData) => {
+    return response.json().then(
+      (errorData) => {
         throw new Error(errorData.error || "Ошибка API");
-      })
-      .catch(() => {
+      },
+      () => {
         throw new Error("Ошибка API");
-      });
+      },
+    );
   }
 
   return response.json();
