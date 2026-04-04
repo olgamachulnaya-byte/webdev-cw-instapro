@@ -89,7 +89,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           return;
         }
 
-        loginUser({ login, password })
+        loginUser({ login: normalizedLogin, password: normalizedPassword })
           .then((newUser) => {
             setUser(newUser.user);
           })
@@ -117,7 +117,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       }
         registerUser({
           login: normalizedLogin,
-          password,
+           password: normalizedPassword,
           name,
           imageUrl,
         })
