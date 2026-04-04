@@ -77,11 +77,13 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       setError("");
       submitButton.disabled = true;
 
-      const login = document.getElementById("login-input").value.trim();
-      const password = document.getElementById("password-input").value.trim();
+    const login = document.getElementById("login-input").value;
+      const password = document.getElementById("password-input").value;
+      const normalizedLogin = login.trim();
+      const normalizedPassword = password.trim();
 
         if (isLoginMode) {
-        if (!login || !password) {
+         if (!normalizedLogin || !normalizedPassword) {
           submitButton.disabled = false;
           setError("Введите логин и пароль");
           return;
@@ -102,7 +104,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       }
 
       const name = document.getElementById("name-input").value.trim();
-      if (!name || !login || !password) {
+      if (!name || !normalizedLogin || !normalizedPassword) {
         submitButton.disabled = false;
         setError("Заполните все поля регистрации");
         return;
@@ -113,7 +115,12 @@ export function renderAuthPageComponent({ appEl, setUser }) {
         setError("Добавьте фото профиля");
         return;
       }
-        registerUser({ login, password, name, imageUrl })
+        registerUser({
+          login: normalizedLogin,
+          password,
+          name,
+          imageUrl,
+        })
         .then((newUser) => {
           setUser(newUser.user);
         })
