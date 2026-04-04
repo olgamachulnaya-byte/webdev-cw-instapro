@@ -95,30 +95,42 @@ export function registerUser({ login, password, name, imageUrl }) {
       name,
       imageUrl,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Такой пользователь уже существует");
-    }
-  
-   return getJson(response);
-  });
+  })
+    .then(getJson)
+    .catch((error) => {
+      const knownError =
+        error.message === "Пользователь с таким логином уже существует" ||
+        error.message === "Такой пользователь уже существует";
+
+      if (knownError) {
+        throw new Error("Такой пользователь уже существует");
+      }
+
+      throw error;
+    });
 }
 
 export function loginUser({ login, password }) {
   return fetch(baseHost + "/api/user/login", {
     method: "POST",
-     headers: jsonHeaders,
+    headers: jsonHeaders,
     body: JSON.stringify({
       login,
       password,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Неверный логин или пароль");
-    }
+ })
+    .then(getJson)
+    .catch((error) => {
+      if (error.message === "Неверный логин или пароль") {
+        throw error;
+      }
 
-    return getJson(response);
-  });
+      if (error.message === "Пользователь не найден") {
+        throw new Error("Неверный логин или пароль");
+      }
+
+    throw error;
+    });
 }
 
 // Загружает картинку в облако, возвращает url загруженной картинки
