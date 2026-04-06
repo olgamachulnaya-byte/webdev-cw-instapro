@@ -25,6 +25,36 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
+const normalizeString = (value) => (typeof value === "string" ? value.trim() : "");
+
+const validateAuthPayload = ({ login, password, requireName = false, name = "" }) => {
+  const normalizedLogin = normalizeString(login);
+  const normalizedPassword = typeof password === "string" ? password : "";
+  const normalizedName = normalizeString(name);
+
+  if (!normalizedLogin || !normalizedPassword || (requireName && !normalizedName)) {
+    throw new Error("Заполните обязательные поля");
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(normalizedLogin)) {
+    throw new Error("Логин может содержать только латинские буквы, цифры и _");
+  }
+
+  if (normalizedPassword.length < 6) {
+    throw new Error("Пароль должен быть не короче 6 символов");
+  }
+
+  if (requireName && normalizedName.length < 2) {
+    throw new Error("Имя должно быть не короче 2 символов");
+  }
+
+  return {
+    login: normalizedLogin,
+    password: normalizedPassword,
+    ...(requireName ? { name: normalizedName } : {}),
+  };
+};
+
 const isDuplicateUserError = (message = "") => {
   const normalized = message.toLowerCase();
 
@@ -84,6 +114,16 @@ export function getUserPosts({ userId, token }) {
 }
 
 export function addPost({ description, imageUrl, token }) {
+  const normalizedDescription = normalizeString(description);
+  const normalizedImageUrl = normalizeString(imageUrl);
+
+  if (!normalizedDescription) {
+    return Promise.reject(new Error("Введите описание поста"));
+  }
+
+  if (!normalizedImageUrl) {
+    return Promise.reject(new Error("Добавьте фотографию"));
+  }
   return fetch(postsHost, {
     method: "POST",
     headers: {
@@ -91,8 +131,8 @@ export function addPost({ description, imageUrl, token }) {
       Authorization: token,
     },
     body: JSON.stringify({
-      description,
-      imageUrl,
+      description: normalizedDescription,
+      imageUrl: normalizedImageUrl,
     }),
   }).then(getJson);
 }
@@ -120,14 +160,26 @@ export function dislikePost({ postId, token }) {
 }
 
 export function registerUser({ login, password, name, imageUrl }) {
+  const validatedAuth = validateAuthPayload({
+    login,
+    password,
+    requireName: true,
+    name,
+  });
+  const normalizedImageUrl = normalizeString(imageUrl);
+
+  if (!normalizedImageUrl) {
+    return Promise.reject(new Error("Добавьте фото профиля"));
+  }
+  
   return fetch(baseHost + "/api/user", {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({
-      login,
-      password,
-      name,
-      imageUrl,
+      login: validatedAuth.login,
+      password: validatedAuth.password,
+      name: validatedAuth.name,
+      imageUrl: normalizedImageUrl,
     }),
     })
     .then(getJson)
@@ -147,12 +199,14 @@ export function registerUser({ login, password, name, imageUrl }) {
 }
 
 export function loginUser({ login, password }) {
+  const validatedAuth = validateAuthPayload({ login, password });
+  
   return fetch(baseHost + "/api/user/login", {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({
-      login,
-      password,
+      login: validatedAuth.login,
+      password: validatedAuth.password,
     }),
  })
     .then(getJson)
