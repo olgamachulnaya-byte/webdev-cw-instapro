@@ -29,8 +29,10 @@ const isDuplicateUserError = (message = "") => {
   const normalized = message.toLowerCase();
 
   return (
-    normalized.includes("пользователь") &&
-    (normalized.includes("существует") || normalized.includes("already exists"))
+   (normalized.includes("пользователь") || normalized.includes("user")) &&
+    (normalized.includes("существует") ||
+      normalized.includes("already exists") ||
+      normalized.includes("already exist"))
   );
 };
 
