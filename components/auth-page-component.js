@@ -12,6 +12,29 @@ export function renderAuthPageComponent({ appEl, setUser }) {
 
   
   const renderForm = () => {
+   const validateCredentials = ({ login, password, isRegistration }) => {
+      if (!login || !password) {
+        return "Введите логин и пароль";
+      }
+
+      if (login.includes(" ")) {
+        return "Логин не должен содержать пробелы";
+      }
+
+      if (login.length < 3) {
+        return "Логин должен быть не короче 3 символов";
+      }
+
+      if (password.length < 6) {
+        return "Пароль должен быть не короче 6 символов";
+      }
+
+      if (isRegistration && password.length > 30) {
+        return "Пароль слишком длинный";
+      }
+
+      return "";
+    };
     const appHtml = `
       <div class="page-container">
           <div class="header-container"></div>
@@ -83,11 +106,17 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       const normalizedPassword = password.trim();
 
         if (isLoginMode) {
-         if (!normalizedLogin || !normalizedPassword) {
-          submitButton.disabled = false;
-          setError("Введите логин и пароль");
-          return;
-        }
+         const validationError = validateCredentials({
+            login: normalizedLogin,
+            password: normalizedPassword,
+            isRegistration: false,
+          });
+
+          if (validationError) {
+            submitButton.disabled = false;
+            setError(validationError);
+            return;
+          }
 
         loginUser({ login: normalizedLogin, password: normalizedPassword })
           .then((newUser) => {
@@ -104,9 +133,27 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       }
 
       const name = document.getElementById("name-input").value.trim();
+      const validationError = validateCredentials({
+        login: normalizedLogin,
+        password: normalizedPassword,
+        isRegistration: true,
+      });
+
+      if (validationError) {
+        submitButton.disabled = false;
+        setError(validationError);
+        return;
+      }
+
       if (!name || !normalizedLogin || !normalizedPassword) {
         submitButton.disabled = false;
         setError("Заполните все поля регистрации");
+        return;
+      }
+     
+      if (name.length < 2) {
+        submitButton.disabled = false;
+        setError("Имя должно быть не короче 2 символов");
         return;
       }
 
