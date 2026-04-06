@@ -1,7 +1,7 @@
 // Замени на свой, чтобы получить независимый от других набор данных.
 // "боевая" версия инстапро лежит в ключе prod
 const personalKey = "instapro-cw-2026";
-const baseHost = "https://wedev-api.sky.pro";
+const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `https://wedev-api.sky.pro/api/v1/${personalKey}/instapro`;
 const getJson = (response) => {
   if (response.status === 401) {
