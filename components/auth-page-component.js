@@ -6,6 +6,7 @@ import { renderUploadImageComponent } from "./upload-image-component.js";
 export function renderAuthPageComponent({ appEl, setUser }) {
  
   let isLoginMode = true;
+  let isSubmitting = false;
 
   
   let imageUrl = "";
@@ -97,7 +98,12 @@ export function renderAuthPageComponent({ appEl, setUser }) {
     }
 
     document.getElementById("login-button").addEventListener("click", () => {
+     if (isSubmitting) {
+        return;
+      }
+     
       setError("");
+      isSubmitting = true;
       submitButton.disabled = true;
 
     const login = document.getElementById("login-input").value;
@@ -113,6 +119,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           });
 
           if (validationError) {
+            isSubmitting = false;
             submitButton.disabled = false;
             setError(validationError);
             return;
@@ -126,6 +133,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
             setError(error.message);
             })
           .finally(() => {
+            isSubmitting = false;
             submitButton.disabled = false;
           });
     
@@ -140,24 +148,28 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       });
 
       if (validationError) {
+        isSubmitting = false;
         submitButton.disabled = false;
         setError(validationError);
         return;
       }
 
       if (!name || !normalizedLogin || !normalizedPassword) {
+        isSubmitting = false;
         submitButton.disabled = false;
         setError("Заполните все поля регистрации");
         return;
       }
      
       if (name.length < 2) {
+        isSubmitting = false;
         submitButton.disabled = false;
         setError("Имя должно быть не короче 2 символов");
         return;
       }
 
         if (!imageUrl) {
+        isSubmitting = false;
         submitButton.disabled = false;
         setError("Добавьте фото профиля");
         return;
@@ -175,12 +187,14 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           setError(error.message);
         })
         .finally(() => {
+          isSubmitting = false;
           submitButton.disabled = false;
         });
     });
 
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLoginMode = !isLoginMode;
+      isSubmitting = false;
       imageUrl = "";
       renderForm();
     });
