@@ -25,6 +25,27 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
+const isDuplicateUserError = (message = "") => {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("пользователь") &&
+    (normalized.includes("существует") || normalized.includes("already exists"))
+  );
+};
+
+const isInvalidCredentialsError = (message = "") => {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("невер") ||
+    normalized.includes("неправ") ||
+    normalized.includes("не найден") ||
+    normalized.includes("invalid") ||
+    normalized.includes("not found")
+  );
+};
+
 export function getPosts({ token }) {
   return fetch(postsHost, {
     method: "GET",
@@ -95,14 +116,10 @@ export function registerUser({ login, password, name, imageUrl }) {
       name,
       imageUrl,
     }),
-  })
+    })
     .then(getJson)
     .catch((error) => {
-      const knownError =
-        error.message === "Пользователь с таким логином уже существует" ||
-        error.message === "Такой пользователь уже существует";
-
-      if (knownError) {
+        if (isDuplicateUserError(error.message)) {
         throw new Error("Такой пользователь уже существует");
       }
 
@@ -121,11 +138,7 @@ export function loginUser({ login, password }) {
  })
     .then(getJson)
     .catch((error) => {
-      if (error.message === "Неверный логин или пароль") {
-        throw error;
-      }
-
-      if (error.message === "Пользователь не найден") {
+      if (isInvalidCredentialsError(error.message)) {
         throw new Error("Неверный логин или пароль");
       }
 
