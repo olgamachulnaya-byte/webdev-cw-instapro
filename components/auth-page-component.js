@@ -103,7 +103,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
     const login = document.getElementById("login-input").value;
       const password = document.getElementById("password-input").value;
       const normalizedLogin = login.trim();
-      const normalizedPassword = password.trim();
+      const normalizedPassword = password;
 
         if (isLoginMode) {
          const validationError = validateCredentials({
