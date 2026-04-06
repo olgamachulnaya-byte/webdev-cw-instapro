@@ -39,6 +39,18 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
         return;
       }
 
+     if (!file.type.startsWith("image/")) {
+        errorMessage = "Можно загружать только изображения";
+        render();
+        return;
+      }
+
+      if (file.size > maxImageSizeMb * 1024 * 1024) {
+        errorMessage = `Файл слишком большой (максимум ${maxImageSizeMb} МБ)`;
+        render();
+        return;
+      }
+      
       errorMessage = "";
       const labelEl = element.querySelector(".file-upload-label");
       labelEl?.setAttribute("disabled", true);
