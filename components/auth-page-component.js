@@ -26,6 +26,11 @@ export function renderAuthPageComponent({ appEl, setUser }) {
         return "Логин должен быть не короче 3 символов";
       }
 
+    if (!/^[a-zA-Z0-9_]+$/.test(login)) {
+        return "Логин может содержать только латинские буквы, цифры и _";
+      }
+
+    
       if (password.length < 6) {
         return "Пароль должен быть не короче 6 символов";
       }
@@ -47,26 +52,26 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                     : "Регистрация в&nbsp;Instapro"
                 }
               </h3>
-              <div class="form-inputs">
+              <form class="form-inputs" id="auth-form">
                   ${
                     !isLoginMode
                       ? `
                       <div class="upload-image-container"></div>
-                      <input type="text" id="name-input" class="input" placeholder="Имя" />
+                      <input type="text" id="name-input" class="input" placeholder="Имя" autocomplete="name" />
                       `
                       : ""
                   }
-                  <input type="text" id="login-input" class="input" placeholder="Логин" />
-                  <input type="password" id="password-input" class="input" placeholder="Пароль" />
+                  <input type="text" id="login-input" class="input" placeholder="Логин" autocomplete="username" />
+                  <input type="password" id="password-input" class="input" placeholder="Пароль" autocomplete="${isLoginMode ? "current-password" : "new-password"}" />
                  <div class="form-error" role="alert"></div>
-                  <button class="button" id="login-button">${
+                  <button class="button" id="login-button" type="submit">${
                     isLoginMode ? "Войти" : "Зарегистрироваться"
                   }</button>
-              </div>
+              </form>
               <div class="form-footer">
                 <p class="form-footer-title">
                   ${isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?"}
-                  <button class="link-button" id="toggle-button">
+                  <button class="link-button" id="toggle-button" type="button">
                     ${isLoginMode ? "Зарегистрироваться." : "Войти."}
                   </button>
                 </p>
@@ -97,7 +102,9 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       });
     }
 
-    document.getElementById("login-button").addEventListener("click", () => {
+      document.getElementById("auth-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+       
      if (isSubmitting) {
         return;
       }
