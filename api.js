@@ -46,6 +46,17 @@ const isInvalidCredentialsError = (message = "") => {
   );
 };
 
+const isBadRequestError = (message = "") => {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("400") ||
+    normalized.includes("bad request") ||
+    normalized.includes("невалид") ||
+    normalized.includes("некоррект")
+  );
+};
+
 export function getPosts({ token }) {
   return fetch(postsHost, {
     method: "GET",
@@ -119,8 +130,14 @@ export function registerUser({ login, password, name, imageUrl }) {
     })
     .then(getJson)
     .catch((error) => {
-        if (isDuplicateUserError(error.message)) {
+      if (isDuplicateUserError(error.message)) {
         throw new Error("Такой пользователь уже существует");
+      }
+
+      if (isBadRequestError(error.message)) {
+        throw new Error(
+          "Некорректные данные регистрации. Проверьте логин, пароль, имя и фото профиля.",
+        );
       }
 
       throw error;
@@ -142,7 +159,13 @@ export function loginUser({ login, password }) {
         throw new Error("Неверный логин или пароль");
       }
 
-    throw error;
+   if (isBadRequestError(error.message)) {
+        throw new Error(
+          "Некорректный формат данных для входа. Проверьте логин и пароль.",
+        );
+      }
+
+      throw error;
     });
 }
 
