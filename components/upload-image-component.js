@@ -12,7 +12,7 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
             ? `
             <div class="file-upload-image-container">
               <img class="file-upload-image" src="${imageUrl}" alt="Загруженное изображение">
-              <button class="file-upload-remove-button button">Заменить фото</button>
+              <button type="button" class="file-upload-remove-button button">Заменить фото</button>
             </div>
             `
             : `
