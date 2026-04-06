@@ -61,8 +61,8 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                       `
                       : ""
                   }
-                  <input type="text" id="login-input" class="input" placeholder="Логин" autocomplete="username" />
-                  <input type="password" id="password-input" class="input" placeholder="Пароль" autocomplete="${isLoginMode ? "current-password" : "new-password"}" />
+                 <input type="text" id="login-input" class="input" placeholder="Логин" autocomplete="username" form="auth-form" />
+                  <input type="password" id="password-input" class="input" placeholder="Пароль" autocomplete="${isLoginMode ? "current-password" : "new-password"}" form="auth-form" />
                  <div class="form-error" role="alert"></div>
                   <button class="button" id="login-button" type="submit">${
                     isLoginMode ? "Войти" : "Зарегистрироваться"
