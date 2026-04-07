@@ -3,6 +3,7 @@ import { uploadImage } from "../api.js";
 export function renderUploadImageComponent({ element, onImageUrlChange }) {
   let imageUrl = "";
   let errorMessage = "";
+  let isUploading = false;
   const maxImageSizeMb = 10;
   
   const render = () => {
@@ -23,8 +24,9 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
                 class="file-upload-input"
                 style="display:none"
                  accept="image/*"
+                 ${isUploading ? "disabled" : ""}
               />
-              Выберите фото
+             ${isUploading ? "Загружаю файл..." : "Выберите фото"}
             </label>
           `
         }
@@ -34,6 +36,10 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
 
     const fileInputElement = element.querySelector(".file-upload-input");
     fileInputElement?.addEventListener("change", () => {
+       if (isUploading) {
+        return;
+      }
+      
       const file = fileInputElement.files[0];
       if (!file) {
         return;
@@ -52,20 +58,19 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
       }
       
       errorMessage = "";
-      const labelEl = element.querySelector(".file-upload-label");
-      labelEl?.setAttribute("disabled", true);
-      if (labelEl) {
-        labelEl.textContent = "Загружаю файл...";
-      }
+     isUploading = true;
+      render();
       
       uploadImage({ file })
         .then(({ fileUrl }) => {
           imageUrl = fileUrl;
           onImageUrlChange(imageUrl);
-          render();
         })
         .catch(() => {
           errorMessage = "Не удалось загрузить изображение";
+          })
+        .finally(() => {
+          isUploading = false;
           render();
         });
     });
