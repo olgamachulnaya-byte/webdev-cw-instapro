@@ -22,12 +22,29 @@ import {
   saveUserToLocalStorage,
 } from "./helpers.js";
 
-export let user = getUserFromLocalStorage();
+const getValidatedStoredUser = () => {
+  const storedUser = getUserFromLocalStorage();
+
+  if (storedUser && typeof storedUser.token === "string" && storedUser.token.trim()) {
+    return storedUser;
+  }
+
+  if (storedUser) {
+    removeUserFromLocalStorage();
+  }
+
+  return null;
+};
+
+export let user = getValidatedStoredUser();
 export let page = null;
 export let posts = [];
 let currentUserPostsPageUserId = null;
 
-const getToken = () => (user ? `Bearer ${user.token}` : undefined);
+const getToken = () =>
+  user && typeof user.token === "string" && user.token.trim()
+    ? `Bearer ${user.token}`
+    : undefined;
 
 const toggleLike = ({ postId }) => {
   const selectedPost = posts.find((post) => post.id === postId);
@@ -85,6 +102,11 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
+        if (!data?.userId) {
+        console.error("USER_POSTS_PAGE requires data.userId");
+        return goToPage(POSTS_PAGE);
+      }
+      
       currentUserPostsPageUserId = data.userId;
       page = LOADING_PAGE;
       renderApp();
