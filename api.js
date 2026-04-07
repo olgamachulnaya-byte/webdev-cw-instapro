@@ -3,6 +3,7 @@
 const personalKey = "instapro-cw-2026";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
+const NETWORK_ERROR_MESSAGE = "Проблема сети, попробуйте позже";
 const getJson = (response) => {
   if (response.status === 401) {
     throw new Error("Нет авторизации");
@@ -24,6 +25,15 @@ const getJson = (response) => {
 const jsonHeaders = {
   "Content-Type": "application/json",
 };
+
+const request = (url, options) =>
+  fetch(url, options).catch((error) => {
+    if (error instanceof TypeError) {
+      throw new Error(NETWORK_ERROR_MESSAGE);
+    }
+
+    throw error;
+  });
 
 const normalizeString = (value) => (typeof value === "string" ? value.trim() : "");
 
@@ -90,7 +100,7 @@ const isBadRequestError = (message = "") => {
 };
 
 export function getPosts({ token }) {
-  return fetch(postsHost, {
+  return request(postsHost, {
     method: "GET",
     headers: {
        ...(token ? { Authorization: token } : {}),
@@ -101,7 +111,7 @@ export function getPosts({ token }) {
 }
 
 export function getUserPosts({ userId, token }) {
-  return fetch(`${postsHost}/user-posts/${userId}`, {
+  return request(`${postsHost}/user-posts/${userId}`, {
     method: "GET",
     headers: {
      ...(token ? { Authorization: token } : {}),
@@ -124,7 +134,7 @@ export function addPost({ description, imageUrl, token }) {
   if (!normalizedImageUrl) {
     return Promise.reject(new Error("Добавьте фотографию"));
   }
-  return fetch(postsHost, {
+  return request(postsHost, {
     method: "POST",
     headers: {
        ...jsonHeaders,
@@ -138,7 +148,7 @@ export function addPost({ description, imageUrl, token }) {
 }
 
 export function likePost({ postId, token }) {
-  return fetch(`${postsHost}/${postId}/like`, {
+ return request(`${postsHost}/${postId}/like`, {
     method: "POST",
     headers: {
       Authorization: token,
@@ -149,7 +159,7 @@ export function likePost({ postId, token }) {
 }
 
 export function dislikePost({ postId, token }) {
-  return fetch(`${postsHost}/${postId}/dislike`, {
+   return request(`${postsHost}/${postId}/dislike`, {
     method: "POST",
     headers: {
       Authorization: token,
@@ -172,7 +182,7 @@ export function registerUser({ login, password, name, imageUrl }) {
     return Promise.reject(new Error("Добавьте фото профиля"));
   }
   
-  return fetch(baseHost + "/api/user", {
+  return request(baseHost + "/api/user", {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({
@@ -201,7 +211,7 @@ export function registerUser({ login, password, name, imageUrl }) {
 export function loginUser({ login, password }) {
   const validatedAuth = validateAuthPayload({ login, password });
   
-  return fetch(baseHost + "/api/user/login", {
+  return request(baseHost + "/api/user/login", {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({
@@ -230,7 +240,7 @@ export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);
 
-  return fetch(baseHost + "/api/upload/image", {
+  return request(baseHost + "/api/upload/image", {
     method: "POST",
     body: data,
    }).then(getJson);
