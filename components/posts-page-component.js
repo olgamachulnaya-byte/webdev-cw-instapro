@@ -32,8 +32,10 @@ export function renderPostsPageComponent({ appEl, onLikeClick, pageTitle = "" })
         ? "./assets/images/like-active.svg"
         : "./assets/images/like-not-active.svg";
 
-       return `<li class="post fade-in">
-          <div class="post-header" data-user-id="${post.user.id}">
+        const userId = post.user?.id ?? "";
+
+      return `<li class="post fade-in">
+          <div class="post-header" data-user-id="${userId}">
               <img src="${post.user.imageUrl}" class="post-header__user-image" alt="Аватар ${escapeHtml(
         post.user.name,
       )}">
@@ -87,8 +89,13 @@ const backButtonHtml = pageTitle
 
   for (const userEl of document.querySelectorAll(".post-header")) {
     userEl.addEventListener("click", () => {
+         const userId = userEl.dataset.userId?.trim();
+      if (!userId || userId === "undefined" || userId === "null") {
+        return;
+      }
+      
       goToPage(USER_POSTS_PAGE, {
-        userId: userEl.dataset.userId,
+        userId,
       });
     });
   }
