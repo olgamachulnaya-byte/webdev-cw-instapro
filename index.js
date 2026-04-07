@@ -102,16 +102,19 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
-        if (!data?.userId) {
+        const userId =
+        typeof data?.userId === "string" ? data.userId.trim() : String(data?.userId ?? "").trim();
+
+      if (!userId || userId === "undefined" || userId === "null") {
         console.error("USER_POSTS_PAGE requires data.userId");
         return goToPage(POSTS_PAGE);
       }
       
-      currentUserPostsPageUserId = data.userId;
+      currentUserPostsPageUserId = userId;
       page = LOADING_PAGE;
       renderApp();
 
-      return getUserPosts({ userId: data.userId, token: getToken() })
+      return getUserPosts({ userId, token: getToken() })
         .then((newPosts) => {
           page = USER_POSTS_PAGE;
           posts = newPosts;
