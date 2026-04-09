@@ -26,14 +26,31 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
-const request = (url, options) =>
-  fetch(url, options).catch((error) => {
+const request = (url, options = {}) => {
+  const { json, headers, ...restOptions } = options;
+  const preparedOptions = {
+    ...restOptions,
+    ...(headers ? { headers: { ...headers } } : {}),
+  };
+
+  if (json !== undefined) {
+    preparedOptions.headers = {
+      ...jsonHeaders,
+      ...(preparedOptions.headers || {}),
+    };
+
+    preparedOptions.body =
+      typeof json === "string" ? json : JSON.stringify(json);
+  }
+
+  return fetch(url, preparedOptions).catch((error) => {
     if (error instanceof TypeError) {
       throw new Error(NETWORK_ERROR_MESSAGE);
     }
 
     throw error;
   });
+};
 
 const normalizeString = (value) => (typeof value === "string" ? value.trim() : "");
 
@@ -137,13 +154,12 @@ export function addPost({ description, imageUrl, token }) {
   return request(postsHost, {
     method: "POST",
     headers: {
-       ...jsonHeaders,
       Authorization: token,
     },
-    body: JSON.stringify({
+     json: {
       description: normalizedDescription,
       imageUrl: normalizedImageUrl,
-    }),
+    },
   }).then(getJson);
 }
 
@@ -184,13 +200,12 @@ export function registerUser({ login, password, name, imageUrl }) {
   
   return request(baseHost + "/api/user", {
     method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({
+    json: {
       login: validatedAuth.login,
       password: validatedAuth.password,
       name: validatedAuth.name,
       imageUrl: normalizedImageUrl,
-    }),
+     },
     })
     .then(getJson)
     .catch((error) => {
@@ -213,11 +228,10 @@ export function loginUser({ login, password }) {
   
   return request(baseHost + "/api/user/login", {
     method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({
+    json: {
       login: validatedAuth.login,
       password: validatedAuth.password,
-    }),
+    },
  })
     .then(getJson)
     .catch((error) => {
