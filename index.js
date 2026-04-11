@@ -46,7 +46,7 @@ const getToken = () =>
     ? `Bearer ${user.token}`
     : undefined;
 
-const toggleLike = ({ postId }) => {
+const toggleLike = ({ postId, shouldRender = true }) => {
   const selectedPost = posts.find((post) => post.id === postId);
   if (!selectedPost || !user) {
     return Promise.resolve();
@@ -56,7 +56,9 @@ const toggleLike = ({ postId }) => {
 
   return request({ postId, token: getToken() }).then((updatedPost) => {
     posts = posts.map((post) => (post.id === postId ? updatedPost : post));
-    renderApp();
+    if (shouldRender) {
+      renderApp();
+    }
   });
 };
 
@@ -197,7 +199,7 @@ const renderApp = () => {
     return renderPostsPageComponent({
       appEl,
       onLikeClick: (postId) =>
-        toggleLike({ postId }).then(() => {
+        toggleLike({ postId, shouldRender: false }).then(() => {
           return getUserPosts({
             userId: currentUserPostsPageUserId,
             token: getToken(),
