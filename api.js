@@ -22,10 +22,6 @@ const getJson = (response) => {
 
   return response.json();
 };
-const jsonHeaders = {
-  "Content-Type": "application/json",
-};
-
 const request = (url, options = {}) => {
   const { json, headers, ...restOptions } = options;
   const preparedOptions = {
@@ -34,11 +30,6 @@ const request = (url, options = {}) => {
   };
 
   if (json !== undefined) {
-    preparedOptions.headers = {
-      ...jsonHeaders,
-      ...(preparedOptions.headers || {}),
-    };
-
     preparedOptions.body =
       typeof json === "string" ? json : JSON.stringify(json);
   }
