@@ -10,6 +10,10 @@
   padding: 20px 16px;
   margin-left: -20px;
   margin-right: -20px;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 5;
 }
 
 .logo {
@@ -44,6 +48,16 @@
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+.post {
+  border-radius: 16px;
+  padding: 8px 10px 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.post:hover {
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
 }
 
 .post-header {
@@ -88,9 +102,22 @@
   border: none;
   background-color: transparent;
   padding: 8px;
-  padding-left: 0px;
+  padding-left: 0;
   padding-bottom: 5px;
   cursor: pointer;
+}
+
+.like-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.like-button_loading {
+  filter: grayscale(1);
+}
+
+.like-button_pulse {
+  animation: pulse 0.25s ease;
 }
 
 .user-name {
@@ -101,6 +128,7 @@
   font-size: 14px;
   line-height: 18px;
   margin-top: 5px;
+  overflow-wrap: anywhere;
 }
 
 .post-date {
@@ -162,7 +190,8 @@
 }
 
 .form-error {
-  color: red;
+ color: #cc0000;
+  min-height: 18px;
 }
 
 .form-footer {
@@ -176,7 +205,7 @@
   text-align: center;
 }
 
-.file-upload-image-conrainer {
+.file-upload-image-container {
   display: flex;
   align-items: center;
 }
@@ -195,4 +224,70 @@
   box-sizing: border-box;
   width: 100%;
   text-align: center;
+}
+
+.post-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-counter {
+  color: #8a8a8a;
+  font-size: 12px;
+}
+
+.feed-title {
+  margin: 8px 0;
+}
+
+.feed-back-button {
+  margin-bottom: 12px;
+}
+
+.empty-feed {
+  text-align: center;
+  color: #6a6a6a;
+  margin-top: 40px;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 0 12px;
+  }
+
+  .post-image-container {
+    margin-left: -12px;
+    margin-right: -12px;
+    height: 340px;
+  }
+
+  .form-title {
+    font-size: 24px;
+  }
 }

@@ -2,39 +2,49 @@ import { loginUser, registerUser } from "../api.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
 
-/**
- * Компонент страницы авторизации.
- * Этот компонент предоставляет пользователю интерфейс для входа в систему или регистрации.
- * Форма переключается между режимами "Вход" и "Регистрация".
- *
- * @param {HTMLElement} params.appEl - Корневой элемент приложения, в который будет рендериться страница.
- * @param {Function} params.setUser - Функция, вызываемая при успешной авторизации или регистрации.
- *                                    Принимает объект пользователя в качестве аргумента.
- */
-export function renderAuthPageComponent({ appEl, setUser }) {
-  /**
-   * Флаг, указывающий текущий режим формы.
-   * Если `true`, форма находится в режиме входа. Если `false`, в режиме регистрации.
-   * @type {boolean}
-   */
-  let isLoginMode = true;
 
-  /**
-   * URL изображения, загруженного пользователем при регистрации.
-   * Используется только в режиме регистрации.
-   * @type {string}
-   */
+export function renderAuthPageComponent({ appEl, setUser }) {
+ 
+  let isLoginMode = true;
+  let isSubmitting = false;
+
+  
   let imageUrl = "";
 
-  /**
-   * Рендерит форму авторизации или регистрации.
-   * В зависимости от значения `isLoginMode` отображает соответствующий интерфейс.
-   */
+  
   const renderForm = () => {
+   const validateCredentials = ({ login, password, isRegistration }) => {
+      if (!login || !password) {
+        return "Введите логин и пароль";
+      }
+
+      if (login.includes(" ")) {
+        return "Логин не должен содержать пробелы";
+      }
+
+      if (login.length < 3) {
+        return "Логин должен быть не короче 3 символов";
+      }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(login)) {
+        return "Логин может содержать только латинские буквы, цифры и _";
+      }
+
+    
+      if (password.length < 6) {
+        return "Пароль должен быть не короче 6 символов";
+      }
+
+      if (isRegistration && password.length > 30) {
+        return "Пароль слишком длинный";
+      }
+
+      return "";
+    };
     const appHtml = `
       <div class="page-container">
           <div class="header-container"></div>
-          <div class="form">
+          <div class="form fade-in">
               <h3 class="form-title">
                 ${
                   isLoginMode
@@ -42,50 +52,46 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                     : "Регистрация в&nbsp;Instapro"
                 }
               </h3>
-              <div class="form-inputs">
+              <form class="form-inputs" id="auth-form">
                   ${
                     !isLoginMode
                       ? `
                       <div class="upload-image-container"></div>
-                      <input type="text" id="name-input" class="input" placeholder="Имя" />
+                      <input type="text" id="name-input" class="input" placeholder="Имя" autocomplete="name" />
                       `
                       : ""
                   }
-                  <input type="text" id="login-input" class="input" placeholder="Логин" />
-                  <input type="password" id="password-input" class="input" placeholder="Пароль" />
-                  <div class="form-error"></div>
-                  <button class="button" id="login-button">${
+                 <input type="text" id="login-input" class="input" placeholder="Логин" autocomplete="username" form="auth-form" />
+                  <input type="password" id="password-input" class="input" placeholder="Пароль" autocomplete="${isLoginMode ? "current-password" : "new-password"}" form="auth-form" />
+                 <div class="form-error" role="alert"></div>
+                  <button class="button" id="login-button" type="submit">${
                     isLoginMode ? "Войти" : "Зарегистрироваться"
                   }</button>
-              </div>
+              </form>
               <div class="form-footer">
                 <p class="form-footer-title">
                   ${isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?"}
-                  <button class="link-button" id="toggle-button">
+                  <button class="link-button" id="toggle-button" type="button">
                     ${isLoginMode ? "Зарегистрироваться." : "Войти."}
                   </button>
                 </p>
               </div>
           </div>
-      </div>    
+         </div> 
     `;
 
     appEl.innerHTML = appHtml;
 
-    /**
-     * Устанавливает сообщение об ошибке в форме.
-     * @param {string} message - Текст сообщения об ошибке.
-     */
+   const submitButton = appEl.querySelector("#login-button");
     const setError = (message) => {
       appEl.querySelector(".form-error").textContent = message;
     };
 
-    // Рендерим заголовок страницы
+   
     renderHeaderComponent({
       element: document.querySelector(".header-container"),
     });
 
-    // Если режим регистрации, рендерим компонент загрузки изображения
     const uploadImageContainer = appEl.querySelector(".upload-image-container");
     if (uploadImageContainer) {
       renderUploadImageComponent({
@@ -96,77 +102,110 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       });
     }
 
-    // Обработка клика на кнопку входа/регистрации
-    document.getElementById("login-button").addEventListener("click", () => {
+      document.getElementById("auth-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+       
+     if (isSubmitting) {
+        return;
+      }
+     
       setError("");
+      isSubmitting = true;
+      submitButton.disabled = true;
 
-      if (isLoginMode) {
-        // Обработка входа
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
+    const login = document.getElementById("login-input").value;
+      const password = document.getElementById("password-input").value;
+      const normalizedLogin = login.trim();
+      const normalizedPassword = password;
 
-        if (!login) {
-          alert("Введите логин");
-          return;
-        }
+        if (isLoginMode) {
+         const validationError = validateCredentials({
+            login: normalizedLogin,
+            password: normalizedPassword,
+            isRegistration: false,
+          });
 
-        if (!password) {
-          alert("Введите пароль");
-          return;
-        }
+          if (validationError) {
+            isSubmitting = false;
+            submitButton.disabled = false;
+            setError(validationError);
+            return;
+          }
 
-        loginUser({ login, password })
-          .then((user) => {
-            setUser(user.user);
+        loginUser({ login: normalizedLogin, password: normalizedPassword })
+          .then((newUser) => {
+            setUser(newUser.user);
           })
           .catch((error) => {
-            console.warn(error);
             setError(error.message);
+            })
+          .finally(() => {
+            isSubmitting = false;
+            submitButton.disabled = false;
           });
-      } else {
-        // Обработка регистрации
-        const login = document.getElementById("login-input").value;
-        const name = document.getElementById("name-input").value;
-        const password = document.getElementById("password-input").value;
+    
+       return;
+      }
 
-        if (!name) {
-          alert("Введите имя");
-          return;
-        }
+      const name = document.getElementById("name-input").value.trim();
+      const validationError = validateCredentials({
+        login: normalizedLogin,
+        password: normalizedPassword,
+        isRegistration: true,
+      });
 
-        if (!login) {
-          alert("Введите логин");
-          return;
-        }
+      if (validationError) {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        setError(validationError);
+        return;
+      }
 
-        if (!password) {
-          alert("Введите пароль");
-          return;
-        }
+      if (!name || !normalizedLogin || !normalizedPassword) {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        setError("Заполните все поля регистрации");
+        return;
+      }
+     
+      if (name.length < 2) {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        setError("Имя должно быть не короче 2 символов");
+        return;
+      }
 
         if (!imageUrl) {
-          alert("Не выбрана фотография");
-          return;
-        }
-
-        registerUser({ login, password, name, imageUrl })
-          .then((user) => {
-            setUser(user.user);
-          })
-          .catch((error) => {
-            console.warn(error);
-            setError(error.message);
-          });
+        isSubmitting = false;
+        submitButton.disabled = false;
+        setError("Добавьте фото профиля");
+        return;
       }
+        registerUser({
+          login: normalizedLogin,
+           password: normalizedPassword,
+          name,
+          imageUrl,
+        })
+        .then((newUser) => {
+          setUser(newUser.user);
+        })
+        .catch((error) => {
+          setError(error.message);
+        })
+        .finally(() => {
+          isSubmitting = false;
+          submitButton.disabled = false;
+        });
     });
 
-    // Обработка переключения режима (вход ↔ регистрация)
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLoginMode = !isLoginMode;
-      renderForm(); // Перерисовываем форму с новым режимом
+      isSubmitting = false;
+      imageUrl = "";
+      renderForm();
     });
   };
 
-  // Инициализация формы
   renderForm();
 }
